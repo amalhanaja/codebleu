@@ -7,23 +7,24 @@ import (
 	gitRepoUseCase "codebleu/internal/usecase/gitrepo"
 	llmUseCase "codebleu/internal/usecase/llm"
 	"context"
+	"log"
+	"os"
 )
 
-type app struct {
+func Run() {
+	if err := NewCliApp().Run(os.Args); err != nil {
+		log.Fatalln(err)
+	}
 }
 
-func NewApp() *app {
-	return &app{}
-}
-
-func Run(pullRequestId string) {
+func RunE(pullRequestId string) {
 	cfg := NewConfigFromEnv()
 	bitbucketClient := infraBitbucket.NewClient(
 		cfg.BitbucketRepositoryAccessConfig.Workspace,
 		cfg.BitbucketRepositoryAccessConfig.RepoSlug,
 		cfg.BitbucketRepositoryAccessConfig.AccessToken,
 	)
-	geminiClient := infraGemini.NewClient(cfg.GeminiConfig.ApiKey)
+	geminiClient := infraGemini.NewClient("gemini-1.5-flash", cfg.GeminiConfig.ApiKey)
 	getPullRequest := gitRepoUseCase.GetPullRequest(bitbucketClient)
 	postPullRequestComment := gitRepoUseCase.PostPullRequestComment(bitbucketClient)
 	sendPromptUseCase := llmUseCase.SendPromptUseCase(geminiClient)

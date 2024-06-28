@@ -11,6 +11,7 @@ import (
 
 type client struct {
 	apiKey string
+	model  string
 }
 
 // SendPrompt implements llm.Repository.
@@ -20,8 +21,10 @@ func (c *client) SendPrompt(ctx context.Context, prompt string) (string, error) 
 		return "", err
 	}
 	defer genaiClient.Close()
-	model := genaiClient.GenerativeModel("gemini-1.5-flash")
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
+	model := genaiClient.GenerativeModel(c.model)
+	chat := model.StartChat()
+	chat.History = []*genai.Content{}
+	resp, err := chat.SendMessage(ctx, genai.Text(prompt))
 	if err != nil {
 		return "", err
 	}
@@ -32,8 +35,9 @@ func (c *client) getClient(ctx context.Context) (*genai.Client, error) {
 	return genai.NewClient(ctx, option.WithAPIKey(c.apiKey))
 }
 
-func NewClient(apiKey string) domain.Repository {
+func NewClient(model string, apiKey string) domain.Repository {
 	return &client{
 		apiKey: apiKey,
+		model:  model,
 	}
 }

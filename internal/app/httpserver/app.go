@@ -27,7 +27,7 @@ var (
 			)
 		}),
 		fx.Provide(func(cfg AppConfig) llmDomain.Repository {
-			return infraGemini.NewClient(cfg.GeminiConfig.ApiKey)
+			return infraGemini.NewClient("gemini-1.5-flash", cfg.GeminiConfig.ApiKey)
 		}),
 	)
 
