@@ -34,6 +34,12 @@ func NewCliApp() *cli.App {
 			EnvVars:  []string{"REPOSITORY_PROVIDER"},
 			Required: true,
 		},
+		&cli.StringFlag{
+			Name:     "id",
+			Usage:    "pull request id",
+			EnvVars:  []string{"PULL_REQUEST_ID"},
+			Required: true,
+		},
 	}
 	cliApp.Action = action
 
@@ -62,7 +68,7 @@ func action(ctx *cli.Context) error {
 	sendPromptUseCase := llmUseCase.SendPromptUseCase(llmRepo)
 	reviewPullRequest := codeAssistantUseCase.ReviewPullRequest(sendPromptUseCase)
 	reviewAndCommentPullRequest := codeAssistantUseCase.ReviewAndCommentPullRequest(getPullRequest, reviewPullRequest, postPullRequestComment)
-	if _, err := reviewAndCommentPullRequest.Invoke(context.Background(), "8"); err != nil {
+	if _, err := reviewAndCommentPullRequest.Invoke(context.Background(), ctx.String("id")); err != nil {
 		return err
 	}
 	return nil

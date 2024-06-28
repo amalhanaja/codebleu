@@ -5,6 +5,7 @@ import (
 	infraHttp "codebleu/internal/infrastructure/http"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -16,27 +17,35 @@ func (c *client) GetPullRequest(ctx context.Context, id string) (*domain.PullReq
 	if err != nil {
 		return nil, err
 	}
-	diffLink := pullRequestResponse.Links["diff"].Href
-	reqest, err := c.buildRequest(ctx, http.MethodGet, diffLink, nil)
+	diff, err := c.getPullRequestDiff(ctx, id)
 	if err != nil {
 		return nil, err
-	}
-	httpResponse, err := c.httpClient.Do(reqest)
-	if err != nil {
-		return nil, errors.Join(infraHttp.NewHttpClientError("response failed", diffLink), err)
-	}
-	defer httpResponse.Body.Close()
-	if httpResponse.StatusCode != 200 {
-		return nil, errors.Join(infraHttp.NewHttpClientError("response not succeed", diffLink), err)
-	}
-	body, err := io.ReadAll(httpResponse.Body)
-	if err != nil {
-		return nil, errors.Join(infraHttp.NewHttpClientError("failed read response", diffLink), err)
 	}
 	return &domain.PullRequest{
 		Id:          strconv.Itoa(int(pullRequestResponse.ID)),
 		Title:       pullRequestResponse.Title,
 		Description: pullRequestResponse.Description,
-		DiffPatch:   string(body),
+		DiffPatch:   diff,
 	}, nil
+}
+
+// GetPullRequest implements Client.
+func (c *client) getPullRequest(ctx context.Context, id string) (*PullRequestResponse, error) {
+	var response *PullRequestResponse
+	err := c.doRequest(ctx, http.MethodGet, fmt.Sprintf("/pullrequests/%s", id), nil, &response)
+	return response, err
+}
+
+func (c *client) getPullRequestDiff(ctx context.Context, id string) (string, error) {
+	path := fmt.Sprintf("/pullrequests/%s/diff", id)
+	response, err := c.do(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "nil", errors.Join(infraHttp.NewHttpClientError("failed read response", path), err)
+	}
+	return string(body), nil
 }

@@ -25,12 +25,11 @@ func (r *reviewAndCommentPullRequest) Invoke(ctx context.Context, input string) 
 	if err != nil {
 		return nil, err
 	}
-	_ = gitRepoDomain.PostPullRequestCommentInput{
+	postPullRequestCommentInput := gitRepoDomain.PostPullRequestCommentInput{
 		PullRequestId: input,
 		Comment:       reviewResult,
 	}
-	return nil, nil
-	// return r.postPullRequestComment.Invoke(ctx, postPullRequestCommentInput)
+	return r.postPullRequestComment.Invoke(ctx, postPullRequestCommentInput)
 }
 
 func ReviewAndCommentPullRequest(
