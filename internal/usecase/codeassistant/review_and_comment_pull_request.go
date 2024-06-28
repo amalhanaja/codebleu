@@ -20,10 +20,7 @@ func (r *reviewAndCommentPullRequest) Invoke(ctx context.Context, input string) 
 		return nil, err
 	}
 	reviewResult, err := r.reviewPullRequest.Invoke(ctx, domain.PullRequestReviewInput{
-		PullRequestId: pullRequest.Id,
-		DiffPatch:     pullRequest.DiffPatch,
-		Title:         pullRequest.Title,
-		Description:   pullRequest.Description,
+		PullRequest: pullRequest,
 	})
 	if err != nil {
 		return nil, err

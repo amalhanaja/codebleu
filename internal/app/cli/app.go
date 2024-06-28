@@ -9,6 +9,13 @@ import (
 	"context"
 )
 
+type app struct {
+}
+
+func NewApp() *app {
+	return &app{}
+}
+
 func Run(pullRequestId string) {
 	cfg := NewConfigFromEnv()
 	bitbucketClient := infraBitbucket.NewClient(

@@ -1,8 +1,8 @@
 package codeassistant
 
+import "codebleu/internal/domain/gitrepo"
+
 type PullRequestReviewInput struct {
-	PullRequestId string
-	DiffPatch     string
-	Description   string
-	Title         string
+	PullRequest  *gitrepo.PullRequest
+	ReviewPrompt string
 }
