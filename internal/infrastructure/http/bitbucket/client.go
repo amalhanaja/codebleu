@@ -6,14 +6,14 @@ import (
 )
 
 type client struct {
-	httpClient  http.Client
+	httpClient  *http.Client
 	workspace   string
 	repoSlug    string
 	accessToken string
 }
 
 func NewClient(workspace string, repoSlug string, accessToken string) domain.Repository {
-	httpClient := http.Client{}
+	httpClient := &http.Client{}
 	return &client{
 		httpClient:  httpClient,
 		workspace:   workspace,
