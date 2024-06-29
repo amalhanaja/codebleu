@@ -45,6 +45,9 @@ func (c *client) getPullRequestDiff(ctx context.Context, id string) (string, err
 	if err != nil {
 		return "", err
 	}
+	if httpResponse.StatusCode != http.StatusOK {
+		return "", infraHttp.NewHttpClientError(fmt.Sprintf("response failed %s", string(body)), url)
+	}
 	return string(body), nil
 }
 

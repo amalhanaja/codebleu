@@ -10,7 +10,7 @@ import (
 )
 
 func (c *client) getBaseUrl() string {
-	return "https://api.github.com/"
+	return "https://api.github.com"
 }
 
 func (c *client) buildRequest(ctx context.Context, method string, requestUrl string, bodyPayload io.Reader) (*http.Request, error) {
