@@ -2,8 +2,6 @@ package github
 
 import (
 	"codebleu/internal/domain/gitrepo"
-	"context"
-	"fmt"
 	"net/http"
 )
 
@@ -12,12 +10,6 @@ type client struct {
 	owner       string
 	repoSlug    string
 	httpClient  *http.Client
-}
-
-// PostPullRequestComment implements gitrepo.Repository.
-func (c *client) PostPullRequestComment(ctx context.Context, input gitrepo.PostPullRequestCommentInput) error {
-	fmt.Println(input.Comment)
-	return nil
 }
 
 func NewClient(

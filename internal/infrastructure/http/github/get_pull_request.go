@@ -26,6 +26,7 @@ func (c *client) GetPullRequest(ctx context.Context, id string) (*gitrepo.PullRe
 		Title:       pullRequest.Title,
 		Description: pullRequest.Body,
 		DiffPatch:   diff,
+		CommitHash:  pullRequest.Head.Sha,
 	}, nil
 }
 

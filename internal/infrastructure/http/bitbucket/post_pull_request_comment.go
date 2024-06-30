@@ -18,7 +18,5 @@ func (c *client) PostPullRequestComment(ctx context.Context, input domain.PostPu
 	if err := c.doRequest(ctx, http.MethodPost, fmt.Sprintf("/pullrequests/%s/comments", input.PullRequestId), payload, &response); err != nil {
 		return err
 	}
-	// TODO: REMOVE THIS
-	fmt.Printf("Response\n%+v\n", response)
 	return nil
 }

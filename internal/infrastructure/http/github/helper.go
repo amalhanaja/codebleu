@@ -1,8 +1,10 @@
 package github
 
 import (
+	"bytes"
 	infraHttp "codebleu/internal/infrastructure/http"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -24,4 +26,15 @@ func (c *client) buildRequest(ctx context.Context, method string, requestUrl str
 	}
 	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.accessToken))
 	return request, nil
+}
+
+func (c *client) buildRequestPayload(payload interface{}) (io.Reader, error) {
+	if payload == nil {
+		return nil, nil
+	}
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(jsonPayload), nil
 }

@@ -2,6 +2,7 @@ package gitrepo
 
 type PostPullRequestCommentInput struct {
 	PullRequestId string
+	CommitHash    string
 	Comment       string
 }
 
@@ -10,4 +11,5 @@ type PullRequest struct {
 	Title       string
 	Description string
 	DiffPatch   string
+	CommitHash  string
 }
