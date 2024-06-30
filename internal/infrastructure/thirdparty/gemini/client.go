@@ -15,16 +15,27 @@ type client struct {
 }
 
 // SendPrompt implements llm.Repository.
-func (c *client) SendPrompt(ctx context.Context, prompt string) (string, error) {
+func (c *client) SendPrompt(ctx context.Context, input domain.PromptInput) (string, error) {
 	genaiClient, err := c.getClient(ctx)
 	if err != nil {
 		return "", err
 	}
+	systemOutputInstruction := `
+		#IMPORTANT INSTRUCTION:\n
+		Returns using this JSON scheme: [{path: <string>,comment_in_markdown: <string>}]
+	`
 	defer genaiClient.Close()
 	model := genaiClient.GenerativeModel(c.model)
-	chat := model.StartChat()
-	chat.History = []*genai.Content{}
-	resp, err := chat.SendMessage(ctx, genai.Text(prompt))
+	model.GenerationConfig = genai.GenerationConfig{
+		ResponseMIMEType: "application/json",
+	}
+	model.SystemInstruction = &genai.Content{
+		Parts: []genai.Part{
+			genai.Text(input.SystemInstruction),
+			genai.Text(systemOutputInstruction),
+		},
+	}
+	resp, err := model.GenerateContent(ctx, genai.Text(input.Prompt))
 	if err != nil {
 		return "", err
 	}

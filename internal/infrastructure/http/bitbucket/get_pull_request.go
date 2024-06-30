@@ -26,6 +26,7 @@ func (c *client) GetPullRequest(ctx context.Context, id string) (*domain.PullReq
 		Title:       pullRequestResponse.Title,
 		Description: pullRequestResponse.Description,
 		DiffPatch:   diff,
+		CommitHash:  pullRequestResponse.Source.Commit.Hash,
 	}, nil
 }
 
