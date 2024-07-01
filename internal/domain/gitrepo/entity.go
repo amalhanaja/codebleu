@@ -4,6 +4,7 @@ type PostPullRequestCommentInput struct {
 	PullRequestId string
 	CommitHash    string
 	Comment       string
+	Path          string
 }
 
 type PullRequest struct {

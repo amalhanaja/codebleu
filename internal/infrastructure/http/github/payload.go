@@ -10,8 +10,8 @@ type PullRequestResponse struct {
 }
 
 type PostPullRequestCommentRequest struct {
-	Body     string `json:"body"`
-	CommitId string `json:"commit_id"`
-	Path     string `json:"path"`
-	Line     int    `json:"line"`
+	Body        string `json:"body"`
+	CommitId    string `json:"commit_id"`
+	Path        string `json:"path"`
+	SubjectType string `json:"subject_type"`
 }

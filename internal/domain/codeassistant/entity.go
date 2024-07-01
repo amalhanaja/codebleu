@@ -8,3 +8,8 @@ type PullRequestReviewInput struct {
 	PullRequest       *gitrepo.PullRequest
 	SystemInstruction string
 }
+
+type ReviewResult struct {
+	Path    string `json:"path"`
+	Comment string `json:"comment_in_markdown"`
+}

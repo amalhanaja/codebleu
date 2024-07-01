@@ -5,11 +5,12 @@ import (
 	gitRepoDomain "codebleu/internal/domain/gitrepo"
 	"codebleu/internal/usecase"
 	"context"
+	"errors"
 )
 
 type reviewAndCommentPullRequest struct {
 	getPullRequest         usecase.UseCase[string, *gitRepoDomain.PullRequest]
-	reviewPullRequest      usecase.UseCase[domain.PullRequestReviewInput, string]
+	reviewPullRequest      usecase.UseCase[domain.PullRequestReviewInput, []domain.ReviewResult]
 	postPullRequestComment usecase.UseCase[gitRepoDomain.PostPullRequestCommentInput, interface{}]
 }
 
@@ -19,22 +20,35 @@ func (r *reviewAndCommentPullRequest) Invoke(ctx context.Context, input string) 
 	if err != nil {
 		return nil, err
 	}
-	reviewResult, err := r.reviewPullRequest.Invoke(ctx, domain.PullRequestReviewInput{
+	reviewResults, err := r.reviewPullRequest.Invoke(ctx, domain.PullRequestReviewInput{
 		PullRequest: pullRequest,
 	})
 	if err != nil {
 		return nil, err
 	}
-	postPullRequestCommentInput := gitRepoDomain.PostPullRequestCommentInput{
-		PullRequestId: input,
-		Comment:       reviewResult,
+	for _, reviewResult := range reviewResults {
+		_, postCommentErr := r.postPullRequestComment.Invoke(ctx, gitRepoDomain.PostPullRequestCommentInput{
+			PullRequestId: input,
+			CommitHash:    pullRequest.CommitHash,
+			Path:          reviewResult.Path,
+			Comment:       reviewResult.Comment,
+		})
+		if postCommentErr != nil {
+			if err == nil {
+				err = errors.New("failed post comment")
+			}
+			err = errors.Join(err, postCommentErr)
+		}
 	}
-	return r.postPullRequestComment.Invoke(ctx, postPullRequestCommentInput)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
 
 func ReviewAndCommentPullRequest(
 	getPullRequest usecase.UseCase[string, *gitRepoDomain.PullRequest],
-	reviewPullRequest usecase.UseCase[domain.PullRequestReviewInput, string],
+	reviewPullRequest usecase.UseCase[domain.PullRequestReviewInput, []domain.ReviewResult],
 	postPullRequestComment usecase.UseCase[gitRepoDomain.PostPullRequestCommentInput, interface{}],
 ) usecase.UseCase[string, interface{}] {
 	return &reviewAndCommentPullRequest{

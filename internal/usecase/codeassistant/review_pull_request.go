@@ -6,6 +6,7 @@ import (
 	llmDomain "codebleu/internal/domain/llm"
 	u "codebleu/internal/usecase"
 	"context"
+	"encoding/json"
 	"text/template"
 )
 
@@ -14,7 +15,7 @@ type reviewPullRequest struct {
 }
 
 // Invoke implements usecase.UseCase.
-func (u *reviewPullRequest) Invoke(ctx context.Context, input domain.PullRequestReviewInput) (string, error) {
+func (u *reviewPullRequest) Invoke(ctx context.Context, input domain.PullRequestReviewInput) ([]domain.ReviewResult, error) {
 	systemInstruction := input.SystemInstruction
 	if systemInstruction == "" {
 		systemInstruction = u.getDefaultSystemInstruction()
@@ -23,16 +24,21 @@ func (u *reviewPullRequest) Invoke(ctx context.Context, input domain.PullRequest
 	var promptBuffer bytes.Buffer
 	err := promptTemplate.Execute(&promptBuffer, input.PullRequest)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	res, err := u.sendPromptUseCase.Invoke(ctx, llmDomain.PromptInput{
+	rawResult, err := u.sendPromptUseCase.Invoke(ctx, llmDomain.PromptInput{
 		SystemInstruction: systemInstruction,
 		Prompt:            promptBuffer.String(),
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return res, nil
+	var result []domain.ReviewResult
+	err = json.Unmarshal([]byte(rawResult), &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (u *reviewPullRequest) getDefaultSystemInstruction() string {
@@ -45,8 +51,6 @@ func (u *reviewPullRequest) getDefaultSystemInstruction() string {
 	Additional Context: PR Title, PR Description.
 
 	Task: Review a file of source code, and the git diff of a set of changes made to that file on a Pull Request.
-	- Do NOT provide general feedback, summaries, explanations of changes, or praises for making good additions. 
-	- Focus solely on offering specific, objective insights based on the given context and refrain from making broad comments about potential impacts on the system or question intentions behind the changes.
 	`
 }
 
@@ -65,7 +69,7 @@ func (u *reviewPullRequest) getDefaultPromptTemplate() string {
 
 func ReviewPullRequest(
 	sendPromptUseCase u.UseCase[llmDomain.PromptInput, string],
-) u.UseCase[domain.PullRequestReviewInput, string] {
+) u.UseCase[domain.PullRequestReviewInput, []domain.ReviewResult] {
 	return &reviewPullRequest{
 		sendPromptUseCase: sendPromptUseCase,
 	}
