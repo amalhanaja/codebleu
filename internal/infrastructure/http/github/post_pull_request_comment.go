@@ -15,10 +15,10 @@ func (c *client) PostPullRequestComment(ctx context.Context, input gitrepo.PostP
 	url := fmt.Sprintf("%s/repos/%s/%s/pulls/%s/comments", c.getBaseUrl(), c.owner, c.repoSlug, input.PullRequestId)
 	println(input.CommitHash, input.Comment)
 	payload := &PostPullRequestCommentRequest{
-		Body:     input.Comment,
-		CommitId: "a8df929d0e055a95824b5e04636cf97a750fff02",
-		Path:     "go.mod",
-		Line:     0,
+		Body:        input.Comment,
+		CommitId:    input.CommitHash,
+		Path:        input.Path,
+		SubjectType: "file",
 	}
 	jsonPayload, err := c.buildRequestPayload(payload)
 	if err != nil {
