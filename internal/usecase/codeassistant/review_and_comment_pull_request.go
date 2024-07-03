@@ -15,20 +15,21 @@ type reviewAndCommentPullRequest struct {
 }
 
 // Invoke implements usecase.UseCase.
-func (r *reviewAndCommentPullRequest) Invoke(ctx context.Context, input string) (interface{}, error) {
-	pullRequest, err := r.getPullRequest.Invoke(ctx, input)
+func (r *reviewAndCommentPullRequest) Invoke(ctx context.Context, input domain.ReviewAndCommentPullRequestInput) (interface{}, error) {
+	pullRequest, err := r.getPullRequest.Invoke(ctx, input.PullRequestId)
 	if err != nil {
 		return nil, err
 	}
 	reviewResults, err := r.reviewPullRequest.Invoke(ctx, domain.PullRequestReviewInput{
-		PullRequest: pullRequest,
+		PullRequest:       pullRequest,
+		SystemInstruction: input.SystemInstruction,
 	})
 	if err != nil {
 		return nil, err
 	}
 	for _, reviewResult := range reviewResults {
 		_, postCommentErr := r.postPullRequestComment.Invoke(ctx, gitRepoDomain.PostPullRequestCommentInput{
-			PullRequestId: input,
+			PullRequestId: input.PullRequestId,
 			CommitHash:    pullRequest.CommitHash,
 			Path:          reviewResult.Path,
 			Comment:       reviewResult.Comment,
@@ -50,7 +51,7 @@ func ReviewAndCommentPullRequest(
 	getPullRequest usecase.UseCase[string, *gitRepoDomain.PullRequest],
 	reviewPullRequest usecase.UseCase[domain.PullRequestReviewInput, []domain.ReviewResult],
 	postPullRequestComment usecase.UseCase[gitRepoDomain.PostPullRequestCommentInput, interface{}],
-) usecase.UseCase[string, interface{}] {
+) usecase.UseCase[domain.ReviewAndCommentPullRequestInput, interface{}] {
 	return &reviewAndCommentPullRequest{
 		reviewPullRequest:      reviewPullRequest,
 		postPullRequestComment: postPullRequestComment,

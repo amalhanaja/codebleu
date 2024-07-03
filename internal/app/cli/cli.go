@@ -1,10 +1,13 @@
 package cli
 
 import (
+	"codebleu/internal/domain/codeassistant"
 	"codebleu/internal/infrastructure/factories/gitrepo"
 	"codebleu/internal/infrastructure/factories/llm"
 	"context"
 	"errors"
+	"fmt"
+	"io/ioutil"
 
 	codeAssistantUseCase "codebleu/internal/usecase/codeassistant"
 	gitRepoUseCase "codebleu/internal/usecase/gitrepo"
@@ -22,9 +25,10 @@ func NewCliApp() *cli.App {
 	cliApp.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:     "model",
-			Usage:    `uses model to review pull request (options: "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro")`,
+			Usage:    `uses model to review pull request (options: "gemini-1.5-flash" (default), "gemini-1.5-pro", "gemini-1.0-pro")`,
 			Aliases:  []string{"m"},
 			EnvVars:  []string{"MODEL"},
+			Value:    "gemini-1.5-flash",
 			Required: true,
 		},
 		&cli.StringFlag{
@@ -39,6 +43,11 @@ func NewCliApp() *cli.App {
 			Usage:    "pull request id",
 			EnvVars:  []string{"PULL_REQUEST_ID"},
 			Required: true,
+		},
+		&cli.StringFlag{
+			Name:    "system-instruction",
+			Usage:   "Custom system instruction for review pull request diff chages",
+			EnvVars: []string{"SYSTEM_INSTRUCTION"},
 		},
 	}
 	cliApp.Action = action
@@ -63,12 +72,27 @@ func action(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	systemInstructionPath := ctx.String("system-instruction")
+	systemInstruction := ""
+	if systemInstructionPath != "" {
+		content, err := ioutil.ReadFile(systemInstructionPath)
+		if err != nil {
+			return errors.Join(err, fmt.Errorf("failed read file %s", systemInstructionPath))
+		}
+		systemInstruction = string(content)
+	}
 	getPullRequest := gitRepoUseCase.GetPullRequest(remoteRepo)
 	postPullRequestComment := gitRepoUseCase.PostPullRequestComment(remoteRepo)
 	sendPromptUseCase := llmUseCase.SendPromptUseCase(llmRepo)
 	reviewPullRequest := codeAssistantUseCase.ReviewPullRequest(sendPromptUseCase)
 	reviewAndCommentPullRequest := codeAssistantUseCase.ReviewAndCommentPullRequest(getPullRequest, reviewPullRequest, postPullRequestComment)
-	if _, err := reviewAndCommentPullRequest.Invoke(context.Background(), ctx.String("id")); err != nil {
+	if _, err := reviewAndCommentPullRequest.Invoke(
+		context.Background(),
+		codeassistant.ReviewAndCommentPullRequestInput{
+			PullRequestId:     ctx.String("id"),
+			SystemInstruction: systemInstruction,
+		},
+	); err != nil {
 		return err
 	}
 	return nil
