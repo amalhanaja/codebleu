@@ -9,6 +9,11 @@ type PullRequestReviewInput struct {
 	SystemInstruction string
 }
 
+type ReviewAndCommentPullRequestInput struct {
+	PullRequestId     string
+	SystemInstruction string
+}
+
 type ReviewResult struct {
 	Path    string `json:"path"`
 	Comment string `json:"comment_in_markdown"`
