@@ -14,6 +14,9 @@ func (c *client) PostPullRequestComment(ctx context.Context, input domain.PostPu
 		Content: &PullRequestCommentContent{
 			Raw: input.Comment,
 		},
+		Inline: &PullRequestCommentInline{
+			Path: input.Path,
+		},
 	}
 	if err := c.doRequest(ctx, http.MethodPost, fmt.Sprintf("/pullrequests/%s/comments", input.PullRequestId), payload, &response); err != nil {
 		return err

@@ -2,10 +2,15 @@ package bitbucket
 
 type PostPullRequestCommentRequest struct {
 	Content *PullRequestCommentContent `json:"content"`
+	Inline  *PullRequestCommentInline  `json:"inline"`
 }
 
 type PullRequestCommentContent struct {
 	Raw string `json:"raw"`
+}
+
+type PullRequestCommentInline struct {
+	Path string `json:"path"`
 }
 
 type PullRequestResponse struct {
