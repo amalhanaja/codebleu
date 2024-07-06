@@ -16,8 +16,9 @@ before:
     - go generate ./...
 
 builds:
-  - main: ./cmd/cli
-  - env:
+  - id: cli
+    main: ./cmd/cli/
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
