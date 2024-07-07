@@ -16,8 +16,7 @@ before:
     - go generate ./...
 
 builds:
-  - id: cli
-    main: ./cmd/cli/
+  - main: ./cmd/cli/
     env:
       - CGO_ENABLED=0
     goos:
@@ -46,3 +45,15 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+
+signs:
+  - artifacts: checksum
+    cmd: gpg2
+    args: 
+      - "--batch"
+      - "-u"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
